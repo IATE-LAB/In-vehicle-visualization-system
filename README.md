@@ -14,7 +14,7 @@
 ## 📁 项目结构
 
 ```
-└── templates/
+├── templates/
     └── index.html     #  前端页面（情绪图表 + 视频流 + 策略展示）  Flask 模板路径（运行时需放入此目录）
 ├── LICENSE            #  Apache License 2.0
 ├── README.md          # 本文件
