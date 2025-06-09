@@ -14,11 +14,11 @@
 ## 📁 项目结构
 
 ```
-├── real_new_app1.3.py             # 后端主程序（Flask + ONNX + OpenAI）
+├── app.py             # 后端主程序（Flask + ONNX + OpenAI）
 ├── enet_b0_8_best_vgaf.onnx       # 情绪识别模型（ONNX 格式）
 ├── requirements.txt               # Python依赖清单
 └── templates/
-    └── real_new_index1.3.html     #  # 前端页面（情绪图表 + 视频流 + 策略展示）  Flask 模板路径（运行时需放入此目录）
+    └── index.html     #  前端页面（情绪图表 + 视频流 + 策略展示）  Flask 模板路径（运行时需放入此目录）
 ```
 
 ## 🔧 安装与运行
