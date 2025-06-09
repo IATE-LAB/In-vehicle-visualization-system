@@ -13,7 +13,7 @@ from openai import OpenAI
 app = Flask(__name__)
 
 # 初始化摄像头
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0) #多个摄像头可以换索引为1,2,3...
 if not cap.isOpened():
     print("Error: cannot open camera. Check index or device.")
     exit()
@@ -22,7 +22,8 @@ if not cap.isOpened():
 device = "cpu"  # 或者 "cuda" 如果有 GPU 环境
 mtcnn = MTCNN(keep_all=True, post_process=False, min_face_size=40, device=device)
 model_name = get_model_list()[0]
-fer = EmotiEffLibRecognizer(engine="onnx", model_name=model_name, device=device)
+model_path = r"your_path\enet_b0_8_best_vgaf" #后缀一定不要有.onnx
+fer = EmotiEffLibRecognizer(engine="onnx", model_name=model_path, device=device)
 
 # MySQL数据库配置
 MYSQL_CONFIG = {
