@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Real-Time Emotion Detection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+<div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">Real-Time Emotion Detection</h1>
+
+    <div class="flex flex-wrap md:flex-nowrap gap-4">
+        <!-- 左边视频流和首次识别结果 -->
+        <div class="flex-1">
+            <img id="videoStream" class="border border-gray-300 w-full max-w-2xl" src="{{ url_for('video_feed') }}"/>
+            <div class="mt-2">
+                <button id="startButton" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded mr-2">Start</button>
+                <button id="stopButton" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded mr-2">Stop</button>
+                <button onclick="getFirstResult()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                    Get First Result
+                </button>
+            </div>
+
+            <div class="mt-4 bg-white p-4 rounded shadow">
+                <h3 class="text-lg font-semibold mb-2">首次识别结果：</h3>
+                <div id="firstResult" class="p-3 bg-gray-50 rounded">
+                    等待首次识别...
+                </div>
+            </div>
+        </div>
+
+        <!-- 右边图表 -->
+        <div class="w-full md:w-[30rem]">
+            <h2 class="text-lg font-semibold mb-2">Emotion Probabilities</h2>
+            <div id="barChart" class="space-y-2 mb-6"></div>
+            <div class="h-64">
+                <canvas id="lineChart" class="w-full h-full"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const videoStream = document.getElementById("videoStream");
+const startButton = document.getElementById("startButton");
+const stopButton = document.getElementById("stopButton");
+const barChart = document.getElementById("barChart");
+const lineChartCtx = document.getElementById("lineChart").getContext("2d");
+const firstResult = document.getElementById("firstResult");
+
+let lineChart;
+let historyData = {};
+
+const emotionColors = {
+    Neutral: "#9ca3af",
+    Surprise: "#34d399",
+    Anger: "#f87171",
+    Sadness: "#60a5fa",
+    Contempt: "#6366f1",
+    Happiness: "#facc15",
+    Fear: "#fb923c",
+    Disgust: "#a78bfa"
+};
+
+// 归一化情绪数据，使总和为100%
+function normalizeEmotionData(data) {
+    const total = Object.values(data).reduce((sum, val) => sum + val, 0);
+    if (total <= 0) return data;
+
+    const normalized = {};
+    for (const [emotion, value] of Object.entries(data)) {
+        normalized[emotion] = (value / total) * 100;
+    }
+    return normalized;
+}
+
+// 初始化图表
+function initLineChart() {
+    lineChart = new Chart(lineChartCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: []
+        },
+        options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Probability (%)'
+                    }
+                },
+                x: {
+                    ticks: { maxTicksLimit: 10 },
+                    title: {
+                        display: true,
+                        text: 'Time'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        color: "#333",
+                        usePointStyle: true,
+                        boxWidth: 10
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.raw.toFixed(1)}%`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 更新柱状图
+function updateBarChart(data) {
+    const normalizedData = normalizeEmotionData(data);
+    barChart.innerHTML = "";
+
+    // 按概率排序
+    const sortedEmotions = Object.entries(normalizedData)
+        .sort((a, b) => b[1] - a[1]);
+
+    sortedEmotions.forEach(([emotion, prob]) => {
+        const percent = prob.toFixed(1);
+        const wrapper = document.createElement("div");
+        const barColor = emotionColors[emotion] || "gray";
+        wrapper.innerHTML = `
+            <div class="flex justify-between text-sm">
+                <span class="font-medium">${emotion}</span>
+                <span>${percent}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded h-4 overflow-hidden">
+                <div class="transition-all duration-500 h-4" style="width: ${percent}%; background-color: ${barColor}"></div>
+            </div>
+        `;
+        barChart.appendChild(wrapper);
+    });
+}
+
+// 更新折线图
+function updateLineChart(data) {
+    const normalizedData = normalizeEmotionData(data);
+    const timestamp = new Date().toLocaleTimeString();
+
+    for (const [emotion, value] of Object.entries(normalizedData)) {
+        if (!historyData[emotion]) {
+            historyData[emotion] = [];
+            lineChart.data.datasets.push({
+                label: emotion,
+                data: [],
+                fill: false,
+                tension: 0.1,
+                borderColor: emotionColors[emotion] || "#999",
+                borderWidth: 2,
+                pointRadius: 2,
+                pointHoverRadius: 4
+            });
+        }
+        historyData[emotion].push(value);
+        if (historyData[emotion].length > 20) historyData[emotion].shift();
+    }
+
+    lineChart.data.labels.push(timestamp);
+    if (lineChart.data.labels.length > 20) lineChart.data.labels.shift();
+
+    lineChart.data.datasets.forEach(dataset => {
+        const emotion = dataset.label;
+        dataset.data = historyData[emotion] || [];
+    });
+
+    lineChart.update();
+}
+
+// 获取首次识别结果
+function getFirstResult() {
+    fetch('/get_first_result')
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === 'success') {
+                const normalizedData = normalizeEmotionData(data.emotions);
+                let html = '<div class="grid grid-cols-2 gap-2">';
+                for (const [emotion, prob] of Object.entries(normalizedData)) {
+                    html += `
+                        <div class="bg-gray-100 p-2 rounded">
+                            <span class="font-medium">${emotion}:</span>
+                            <span>${prob.toFixed(2)}%</span>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                firstResult.innerHTML = html;
+                firstResult.classList.add('text-green-600');
+            } else {
+                firstResult.textContent = "尚未检测到首次识别结果";
+                firstResult.classList.add('text-gray-600');
+            }
+        });
+}
+
+// 启动视频流和图表更新
+startButton.addEventListener("click", () => {
+    videoStream.src = "/video_feed";
+    initLineChart();
+    startUpdatingChart();
+});
+
+stopButton.addEventListener("click", () => {
+    videoStream.src = "";
+});
+
+// 定时获取情绪数据
+function startUpdatingChart() {
+    setInterval(async () => {
+        try {
+            const response = await fetch("/emotion_probs");
+            const data = await response.json();
+            updateBarChart(data);
+            updateLineChart(data);
+        } catch (e) {
+            console.error("Failed to fetch emotion data", e);
+        }
+    }, 1000);
+}
+
+// 页面加载后自动初始化
+document.addEventListener('DOMContentLoaded', () => {
+    initLineChart();
+    startUpdatingChart();
+});
+</script>
+</body>
+</html>
