@@ -88,11 +88,10 @@ python real_new_app1.3.py
 
 ## 📌 注意事项
 
-- 需要本地摄像头可用；
+- 需要本地摄像头可用,无法调用摄像头时请检查摄像头索引或切换摄像头端口；
 - 需要运行 MySQL 并配置好 emotion_db 数据库；
 - 请放置 HTML 文件于 templates/ 文件夹中；
 - 默认使用 CPU，GPU 可改为 "cuda"；
-- 百度语音接口每日调用有额度限制。
 
 ## 📃 License
 
