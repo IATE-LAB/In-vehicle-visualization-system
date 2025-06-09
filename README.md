@@ -59,7 +59,7 @@ model_path = "enet_b0_8_best_vgaf.onnx"
 python real_new_app1.3.py
 ```
 
-浏览器访问 http://localhost:5000
+
 
 ## 🌟 功能亮点
 
