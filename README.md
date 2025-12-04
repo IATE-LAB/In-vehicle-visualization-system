@@ -90,6 +90,7 @@ python app.py
 - 需要运行 MySQL 并配置好 emotion_db 数据库；
 - 请放置 HTML 文件于 templates/ 文件夹中；
 - 默认使用 CPU，GPU 可改为 "cuda"；
+- 注意数据库的密码是否正确；
 
 ## 📃 License
 
