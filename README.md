@@ -54,7 +54,7 @@ model_path = r"C:\Users\xxx\your_path\enet_b0_8_best_vgaf"
 确保摄像头开启，MySQL 数据库启动，然后运行：
 
 ```bash
-python real_new_app1.3.py
+python app.py
 ```
 
 
