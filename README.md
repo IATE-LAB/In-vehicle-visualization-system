@@ -45,14 +45,9 @@ pip install -r requirements.txt
 请确认 `enet_b0_8_best_vgaf.onnx` 模型路径与代码中一致，例如：
 
 ```python
-model_path = r"C:\Users\xxx\your_path\enet_b0_8_best_vgaf.onnx"
+model_path = r"C:\Users\xxx\your_path\enet_b0_8_best_vgaf"
 ```
 
-也可以直接修改为当前目录：
-
-```python
-model_path = "enet_b0_8_best_vgaf.onnx"
-```
 
 ### 4. 启动项目
 
